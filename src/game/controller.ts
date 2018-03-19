@@ -51,7 +51,7 @@ export default class GameController {
   @Get("/games")
   async allGame() {
     const games = await Game.find();
-    games.sort(function (a, b) { return a.id - b.id;  }) 
+    games.sort(function (a, b) { return a.id - b.id;  })
     const new_games = games.map(game => {
       return {
         id: game.id,

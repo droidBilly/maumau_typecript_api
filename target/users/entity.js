@@ -13,7 +13,6 @@ const typeorm_1 = require("typeorm");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 const bcrypt = require("bcrypt");
-const entities_1 = require("../games/entities");
 let User = class User extends typeorm_1.BaseEntity {
     async setPassword(rawPassword) {
         const hash = await bcrypt.hash(rawPassword, 10);
@@ -51,10 +50,6 @@ __decorate([
     class_transformer_1.Exclude({ toPlainOnly: true }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
-__decorate([
-    typeorm_1.OneToMany(_ => entities_1.Player, player => player.user),
-    __metadata("design:type", Array)
-], User.prototype, "players", void 0);
 User = __decorate([
     typeorm_1.Entity()
 ], User);
