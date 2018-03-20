@@ -22,10 +22,33 @@ let GameController = class GameController {
         const userId = { userid_to_player2: user.id };
         const game = await entity_1.default.findOneById(id);
         if (!game)
-            throw new routing_controllers_1.NotFoundError('Cannot find game');
+            throw new routing_controllers_1.NotFoundError("Cannot find game");
         entity_1.default.merge(game, update, userId).save();
         return {
             message: `The player with id ${userId.userid_to_player2} joined the game ${id}`
+        };
+    }
+    async update(user, id, cardId, update) {
+        const game = await entity_1.default.findOneById(id);
+        if (!game)
+            throw new routing_controllers_1.NotFoundError("Cannot find game");
+        if (game) {
+            if (user.id === game.userid_to_player1) {
+                game.player1 = game.player1.filter(item => {
+                    return item != game.active;
+                });
+            }
+            else if (user.id === game.userid_to_player2) {
+                game.player2 = game.player2.filter(item => {
+                    return item != game.active;
+                });
+            }
+        }
+        game.active = cardId.cardId;
+        entity_1.default.merge(game, update).save();
+        return {
+            active: game.active,
+            card_on_hand: game.player1
         };
     }
     async getGame(id, user) {
@@ -33,28 +56,30 @@ let GameController = class GameController {
         const game = await entity_1.default.findOneById(id);
         if (game) {
             if (userId === Number(game.userid_to_player1)) {
-                return ({
+                return {
                     active: game.active,
-                    player1: game.player1,
-                });
+                    card_on_hand: game.player1
+                };
             }
             else if (userId === Number(game.userid_to_player2)) {
-                return ({
+                return {
                     active: game.active,
-                    player2: game.player2,
-                });
+                    card_on_hand: game.player2
+                };
             }
             else {
-                return ({ message: "You are not playing at this game, get out" });
+                return { message: "You are not playing at this game, get out" };
             }
         }
         else {
-            return ({ message: "user not found" });
+            return { message: "user not found" };
         }
     }
     async allGame() {
         const games = await entity_1.default.find();
-        games.sort(function (a, b) { return a.id - b.id; });
+        games.sort(function (a, b) {
+            return a.id - b.id;
+        });
         const new_games = games.map(game => {
             return {
                 id: game.id,
@@ -68,7 +93,9 @@ let GameController = class GameController {
         const userId = { userId: user.id };
         const game = await logic_1.createGame(userId).save();
         const games = await entity_1.default.find();
-        games.sort(function (a, b) { return a.id - b.id; });
+        games.sort(function (a, b) {
+            return a.id - b.id;
+        });
         const new_games = games.map(game => {
             return {
                 id: game.id,
@@ -76,8 +103,8 @@ let GameController = class GameController {
                 player2: game.userid_to_player2
             };
         });
-        index_1.io.emit('action', {
-            type: 'FETCH_GAMES',
+        index_1.io.emit("action", {
+            type: "FETCH_GAMES",
             payload: new_games
         });
         return {
@@ -87,14 +114,25 @@ let GameController = class GameController {
 };
 __decorate([
     routing_controllers_1.Authorized(),
-    routing_controllers_1.Put('/games/:id/join'),
+    routing_controllers_1.Put("/games/:id/join"),
     __param(0, routing_controllers_1.CurrentUser()),
-    __param(1, routing_controllers_1.Param('id')),
+    __param(1, routing_controllers_1.Param("id")),
     __param(2, routing_controllers_1.Body()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [entity_2.default, Number, Object]),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "updateGame", null);
+__decorate([
+    routing_controllers_1.Authorized(),
+    routing_controllers_1.Put("/games/:id"),
+    __param(0, routing_controllers_1.CurrentUser()),
+    __param(1, routing_controllers_1.Param("id")),
+    __param(2, routing_controllers_1.Body()),
+    __param(3, routing_controllers_1.Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [entity_2.default, Number, Object, Object]),
+    __metadata("design:returntype", Promise)
+], GameController.prototype, "update", null);
 __decorate([
     routing_controllers_1.Authorized(),
     routing_controllers_1.Get("/games/:id"),
