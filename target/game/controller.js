@@ -15,35 +15,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const routing_controllers_1 = require("routing-controllers");
 const entity_1 = require("./entity");
 const logic_1 = require("./logic");
+const entity_2 = require("../users/entity");
 let GameController = class GameController {
-    async updateGame(id, update) {
+    async updateGame(user, id, update) {
+        const userId = { userid_to_player2: user.id };
         const game = await entity_1.default.findOneById(id);
         if (!game)
             throw new routing_controllers_1.NotFoundError('Cannot find game');
-        entity_1.default.merge(game, update).save();
+        entity_1.default.merge(game, update, userId).save();
         return {
-            message: `The player with id ${update.userid_to_player2} joined the game ${id}`
+            message: `The player with id ${userId.userid_to_player2} joined the game ${id}`
         };
     }
-    async getGame(id, userId) {
+    async getGame(id, user) {
+        const userId = user.id;
         const game = await entity_1.default.findOneById(id);
         if (game) {
-            const newUserId = Number(userId);
-            const gameUserId = Number(game.userid_to_player1);
-            if (newUserId === gameUserId) {
+            if (userId === Number(game.userid_to_player1)) {
                 return ({
                     active: game.active,
-                    player1: game.player1
+                    player1: game.player1,
                 });
             }
             else if (userId === Number(game.userid_to_player2)) {
                 return ({
                     active: game.active,
-                    player2: game.player2
+                    player2: game.player2,
                 });
             }
             else {
-                return ({ message: "user not found" });
+                return ({ message: "You are not playing at this game, get out" });
             }
         }
         else {
@@ -56,46 +57,52 @@ let GameController = class GameController {
         const new_games = games.map(game => {
             return {
                 id: game.id,
-                player1: game.userid_to_player1
+                player1: game.userid_to_player1,
             };
         });
         return new_games;
     }
-    async create(userid_to_player1) {
-        const game = await logic_1.createGame(userid_to_player1).save();
+    async create(user) {
+        const userId = { userId: user.id };
+        const game = await logic_1.createGame(userId).save();
         return {
             id: game.id
         };
     }
 };
 __decorate([
+    routing_controllers_1.Authorized(),
     routing_controllers_1.Put('/games/:id/join'),
-    __param(0, routing_controllers_1.Param('id')),
-    __param(1, routing_controllers_1.Body()),
+    __param(0, routing_controllers_1.CurrentUser()),
+    __param(1, routing_controllers_1.Param('id')),
+    __param(2, routing_controllers_1.Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [entity_2.default, Number, Object]),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "updateGame", null);
 __decorate([
-    routing_controllers_1.Get("/games/:id/:userId"),
+    routing_controllers_1.Authorized(),
+    routing_controllers_1.Get("/games/:id"),
     __param(0, routing_controllers_1.Param("id")),
-    __param(1, routing_controllers_1.Param("userId")),
+    __param(1, routing_controllers_1.CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [Number, entity_2.default]),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "getGame", null);
 __decorate([
+    routing_controllers_1.Authorized(),
     routing_controllers_1.Get("/games"),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "allGame", null);
 __decorate([
+    routing_controllers_1.Authorized(),
     routing_controllers_1.Post("/games"),
     routing_controllers_1.HttpCode(201),
-    __param(0, routing_controllers_1.Body()),
+    __param(0, routing_controllers_1.CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [entity_2.default]),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "create", null);
 GameController = __decorate([

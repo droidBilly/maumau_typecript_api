@@ -34,7 +34,11 @@ let LoginController = class LoginController {
         if (!await user.checkPassword(password))
             throw new routing_controllers_1.BadRequestError('The password is not correct');
         const jwt = jwt_1.sign({ id: user.id });
-        return { jwt };
+        return {
+            jwt: jwt,
+            userId: user.id,
+            username: user.firstName
+        };
     }
 };
 __decorate([

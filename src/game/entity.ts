@@ -23,7 +23,7 @@ export default class Game extends BaseEntity {
 
 
   @Column('json', {nullable:true})
-  player1: any[]
+  player1: [number]
 
 
   @Column( 'json', {nullable:true})
