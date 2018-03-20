@@ -58,6 +58,7 @@ let GameController = class GameController {
             return {
                 id: game.id,
                 player1: game.userid_to_player1,
+                player2: game.userid_to_player2
             };
         });
         return new_games;
