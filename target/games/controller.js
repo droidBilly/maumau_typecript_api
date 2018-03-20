@@ -15,11 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const routing_controllers_1 = require("routing-controllers");
 const entity_1 = require("./entity");
 const logic_1 = require("./logic");
+const entity_2 = require("../users/entity");
 let GamesController = class GamesController {
-    async getGames(gameId, userId) {
+    async getGames(gameId, user) {
+        const userId = user.id;
         const game = await entity_1.default.findOneById(gameId);
         if (game) {
-            const new_userId = Number(userId);
+            const new_userId = userId;
             if (new_userId === Number(game.userId_to_player1)) {
                 return ({
                     active: game.active,
@@ -33,7 +35,7 @@ let GamesController = class GamesController {
                 });
             }
             else {
-                return ({ message: "User not found" });
+                return ({ message: "This user not part of this game" });
             }
         }
         else {
@@ -46,54 +48,62 @@ let GamesController = class GamesController {
         const new_games = games.map(game => {
             return {
                 id: game.id,
-                player1: game.userId_to_player1
+                player1: game.userId_to_player1,
+                player2: game.userId_to_player2
             };
         });
         return new_games;
     }
-    async create(userId_to_player1) {
-        const game = await logic_1.createGame(userId_to_player1).save();
+    async create(user) {
+        const userId = { userId: user.id };
+        const game = await logic_1.createGame(userId).save();
         return {
             id: game.id
         };
     }
-    async updateGame(gameId, update) {
+    async updateGame(user, gameId, update) {
+        const userId = { userId_to_player2: user.id };
         const game = await entity_1.default.findOneById(gameId);
         if (!game)
             throw new routing_controllers_1.NotFoundError('Cannot find game');
-        entity_1.default.merge(game, update).save();
+        entity_1.default.merge(game, update, userId).save();
         return {
-            message: `The player with id ${update.userId_to_player2} joined the game ${gameId}`
+            message: `The player with id ${userId.userId_to_player2} joined the game ${gameId}`
         };
     }
 };
 __decorate([
-    routing_controllers_1.Get('/games/:gameId/:userId'),
+    routing_controllers_1.Authorized(),
+    routing_controllers_1.Get('/games/:gameId'),
     __param(0, routing_controllers_1.Param('gameId')),
-    __param(1, routing_controllers_1.Param('userId')),
+    __param(1, routing_controllers_1.CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [Number, entity_2.default]),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "getGames", null);
 __decorate([
+    routing_controllers_1.Authorized(),
     routing_controllers_1.Get('/games'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "allGames", null);
 __decorate([
+    routing_controllers_1.Authorized(),
     routing_controllers_1.Post('/games'),
-    __param(0, routing_controllers_1.Body()),
+    __param(0, routing_controllers_1.CurrentUser()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [entity_2.default]),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "create", null);
 __decorate([
+    routing_controllers_1.Authorized(),
     routing_controllers_1.Put('/games/:gameId/join'),
-    __param(0, routing_controllers_1.Param('gameId')),
-    __param(1, routing_controllers_1.Body()),
+    __param(0, routing_controllers_1.CurrentUser()),
+    __param(1, routing_controllers_1.Param('gameId')),
+    __param(2, routing_controllers_1.Body()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object]),
+    __metadata("design:paramtypes", [entity_2.default, Number, Object]),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "updateGame", null);
 GamesController = __decorate([
