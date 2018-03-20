@@ -2,6 +2,7 @@ import { JsonController, Get, Post,  HttpCode,  Body, Param, Put, NotFoundError,
 import Game from "./entity";
 import { createGame } from "./logic";
 import User from '../users/entity'
+import {io} from '../index'
 
 
 @JsonController()
@@ -76,6 +77,24 @@ export default class GameController {
 
     const userId = {userId: user.id}
     const game = await createGame(userId).save();
+
+    const games = await Game.find()
+     games.sort(function (a, b) { return a.id - b.id;  })
+     const new_games = games.map(game => {
+         return {
+           id: game.id,
+           player1: game.userid_to_player1,
+           player2: game.userid_to_player2
+         }
+       })
+
+     io.emit('action', {
+       type: 'FETCH_GAMES',
+       payload: new_games
+     })
+
+
+
     return {
       id: game.id
     };

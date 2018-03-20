@@ -16,6 +16,7 @@ const routing_controllers_1 = require("routing-controllers");
 const entity_1 = require("./entity");
 const logic_1 = require("./logic");
 const entity_2 = require("../users/entity");
+const index_1 = require("../index");
 let GameController = class GameController {
     async updateGame(user, id, update) {
         const userId = { userid_to_player2: user.id };
@@ -66,6 +67,19 @@ let GameController = class GameController {
     async create(user) {
         const userId = { userId: user.id };
         const game = await logic_1.createGame(userId).save();
+        const games = await entity_1.default.find();
+        games.sort(function (a, b) { return a.id - b.id; });
+        const new_games = games.map(game => {
+            return {
+                id: game.id,
+                player1: game.userid_to_player1,
+                player2: game.userid_to_player2
+            };
+        });
+        index_1.io.emit('action', {
+            type: 'FETCH_GAMES',
+            payload: new_games
+        });
         return {
             id: game.id
         };
