@@ -19,11 +19,16 @@ const entity_2 = require("../users/entity");
 const index_1 = require("../index");
 let GameController = class GameController {
     async updateGame(user, id) {
-        const userId = { userid_to_player2: user.id };
+        const userId = { userid_to_player2: user.id.toString() };
         const game = await entity_1.default.findOneById(id);
         if (!game)
             throw new routing_controllers_1.NotFoundError("Cannot find game");
+        logic_1.checkGameStatus(game);
         entity_1.default.merge(game, userId).save();
+        index_1.io.emit("action", {
+            type: "SET_CARD",
+            payload: await entity_1.default.findOneById(game.id)
+        });
         return {
             message: `The player with id ${userId.userid_to_player2} joined the game ${id}`
         };
@@ -32,7 +37,8 @@ let GameController = class GameController {
         const userId = user.id;
         const game = await entity_1.default.findOneById(gameId);
         if (!game)
-            throw new routing_controllers_1.NotFoundError('Cannot find game');
+            throw new routing_controllers_1.NotFoundError("Cannot find game");
+        logic_1.checkGameStatus(game);
         game.player1 = game.player1.filter(item => {
             return item != game.active;
         });
@@ -41,9 +47,9 @@ let GameController = class GameController {
         });
         game.active = cardId.cardId;
         await entity_1.default.merge(game, userId).save();
-        index_1.io.emit('action', {
-            type: 'SET_CARD',
-            payload: game
+        index_1.io.emit("action", {
+            type: "FETCH_CARDS",
+            payload: await entity_1.default.findOneById(game.id)
         });
         return game;
     }
@@ -51,6 +57,7 @@ let GameController = class GameController {
         const userId = user.id;
         const game = await entity_1.default.findOneById(id);
         if (game) {
+            logic_1.checkGameStatus(game);
             if (userId === Number(game.userid_to_player1)) {
                 return game;
             }
@@ -101,17 +108,16 @@ let GameController = class GameController {
 __decorate([
     routing_controllers_1.Authorized(),
     routing_controllers_1.Put("/games/:id/join"),
-    __param(0, routing_controllers_1.CurrentUser()),
-    __param(1, routing_controllers_1.Param("id")),
+    __param(0, routing_controllers_1.CurrentUser()), __param(1, routing_controllers_1.Param("id")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [entity_2.default, Number]),
     __metadata("design:returntype", Promise)
 ], GameController.prototype, "updateGame", null);
 __decorate([
     routing_controllers_1.Authorized(),
-    routing_controllers_1.Patch('/games/:id'),
+    routing_controllers_1.Patch("/games/:id"),
     __param(0, routing_controllers_1.CurrentUser()),
-    __param(1, routing_controllers_1.Param('id')),
+    __param(1, routing_controllers_1.Param("id")),
     __param(2, routing_controllers_1.Body()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [entity_2.default, Number, Object]),

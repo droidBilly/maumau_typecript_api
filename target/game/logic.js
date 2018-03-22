@@ -21,4 +21,21 @@ function createGame(userId) {
     });
 }
 exports.createGame = createGame;
+function checkGameStatus(game) {
+    switch (game.status) {
+        case null:
+            if (game.userid_to_player1 === null || game.userid_to_player2 === null)
+                return game.status = 'wait';
+        case 'wait':
+            if (!(game.userid_to_player1 === null && game.userid_to_player2 === null))
+                return game.status = 'player1';
+        case 'player1':
+            return game.status = 'player2';
+        case 'player2':
+            return game.status = 'player1';
+        default:
+            return game.status = 'wait';
+    }
+}
+exports.checkGameStatus = checkGameStatus;
 //# sourceMappingURL=logic.js.map

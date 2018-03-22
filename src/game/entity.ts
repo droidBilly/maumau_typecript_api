@@ -37,7 +37,8 @@ export default class Game extends BaseEntity {
   @Column('text', {nullable:true})
   userid_to_player2: any
 
-
+  @Column('text', {nullable:true})
+  status: any
 
 
 }

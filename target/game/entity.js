@@ -45,6 +45,10 @@ __decorate([
     typeorm_1.Column('text', { nullable: true }),
     __metadata("design:type", Object)
 ], Game.prototype, "userid_to_player2", void 0);
+__decorate([
+    typeorm_1.Column('text', { nullable: true }),
+    __metadata("design:type", Object)
+], Game.prototype, "status", void 0);
 Game = __decorate([
     typeorm_1.Entity()
 ], Game);
