@@ -1,7 +1,9 @@
-import { JsonController, CurrentUser, Get, Param, Body, Post, Put, NotFoundError, Authorized } from 'routing-controllers'
+import { JsonController, CurrentUser, Get, Param, Body, Post, Put, Patch, NotFoundError, Authorized } from 'routing-controllers'
 import Game from './entity'
 import { createGame } from './logic'
+import { getActiveAndHandcardsFromUser } from './logic'
 import User from '../users/entity'
+import {io} from '../index'
 
 @JsonController()
 export default class GamesController {
@@ -14,20 +16,10 @@ export default class GamesController {
   ) {
     const userId = user.id
     const game = await Game.findOneById(gameId)
-    if (game) {
-      const new_userId = userId
 
-      if (new_userId === Number(game.userId_to_player1)) {
-        return ({
-          active: game.active,
-          cards_on_hand: game.player1
-        })
-      } else if (new_userId === Number(game.userId_to_player2)) {
-      return ({
-          active: game.active,
-          cards_on_hand: game.player2
-        })
-      }
+    if (game) {
+      if (userId === Number(game.userId_to_player1) || userId === Number(game.userId_to_player2))
+        return (game)
       else {
         return ({ message: "This user not part of this game" });
       }
@@ -48,6 +40,7 @@ export default class GamesController {
           player2: game.userId_to_player2
         }
       })
+
     return new_games
   }
 
@@ -74,11 +67,42 @@ export default class GamesController {
     const game = await Game.findOneById(gameId)
     if (!game) throw new NotFoundError('Cannot find game')
     Game.merge(game, update, userId).save()
+
     return {
       message: `The player with id ${userId.userId_to_player2} joined the game ${gameId}`
     }
   }
 
+  @Authorized()
+  @Patch('/games/:gameId')
+  async playGame(
+    @CurrentUser() user: User,
+    @Param('gameId') gameId: number,
+    @Body() cardId,
+  ) {
+    const userId =  user.id!
+    const game = await Game.findOneById(gameId)
+    if (!game) throw new NotFoundError('Cannot find game')
 
+    game.player1 = game.player1.filter(item => {
+        return item != game.active
+      })
+    game.player2 = game.player2.filter(item => {
+        return item != game.active
+      })
+    game.active = cardId.cardId
+    game.played.push(game.active)
+    await Game.merge(game, update).save()
+
+    io.emit('action', {
+        type: 'FETCH_CARDS',
+        payload: new_game
+      })
+
+    return {
+        active: new_game.active,
+        cards_on_hand: new_game.player2
+      }
+    }
 
 }

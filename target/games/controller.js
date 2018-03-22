@@ -16,24 +16,14 @@ const routing_controllers_1 = require("routing-controllers");
 const entity_1 = require("./entity");
 const logic_1 = require("./logic");
 const entity_2 = require("../users/entity");
+const index_1 = require("../index");
 let GamesController = class GamesController {
     async getGames(gameId, user) {
         const userId = user.id;
         const game = await entity_1.default.findOneById(gameId);
         if (game) {
-            const new_userId = userId;
-            if (new_userId === Number(game.userId_to_player1)) {
-                return ({
-                    active: game.active,
-                    cards_on_hand: game.player1
-                });
-            }
-            else if (new_userId === Number(game.userId_to_player2)) {
-                return ({
-                    active: game.active,
-                    cards_on_hand: game.player2
-                });
-            }
+            if (userId === Number(game.userId_to_player1) || userId === Number(game.userId_to_player2))
+                return (game);
             else {
                 return ({ message: "This user not part of this game" });
             }
@@ -71,6 +61,29 @@ let GamesController = class GamesController {
             message: `The player with id ${userId.userId_to_player2} joined the game ${gameId}`
         };
     }
+    async playGame(user, gameId, cardId) {
+        const userId = user.id;
+        const game = await entity_1.default.findOneById(gameId);
+        if (!game)
+            throw new routing_controllers_1.NotFoundError('Cannot find game');
+        game.player1 = game.player1.filter(item => {
+            return item != game.active;
+        });
+        game.player2 = game.player2.filter(item => {
+            return item != game.active;
+        });
+        game.active = cardId.cardId;
+        game.played.push(game.active);
+        await entity_1.default.merge(game, update).save();
+        index_1.io.emit('action', {
+            type: 'FETCH_CARDS',
+            payload: new_game
+        });
+        return {
+            active: new_game.active,
+            cards_on_hand: new_game.player2
+        };
+    }
 };
 __decorate([
     routing_controllers_1.Authorized(),
@@ -106,6 +119,16 @@ __decorate([
     __metadata("design:paramtypes", [entity_2.default, Number, Object]),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "updateGame", null);
+__decorate([
+    routing_controllers_1.Authorized(),
+    routing_controllers_1.Patch('/games/:gameId'),
+    __param(0, routing_controllers_1.CurrentUser()),
+    __param(1, routing_controllers_1.Param('gameId')),
+    __param(2, routing_controllers_1.Body()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [entity_2.default, Number, Object]),
+    __metadata("design:returntype", Promise)
+], GamesController.prototype, "playGame", null);
 GamesController = __decorate([
     routing_controllers_1.JsonController()
 ], GamesController);
