@@ -18,20 +18,16 @@ const logic_1 = require("./logic");
 const entity_2 = require("../users/entity");
 const index_1 = require("../index");
 let GameController = class GameController {
-    async updateGame(user, id) {
-        const userId = { userid_to_player2: user.id.toString() };
-        const game = await entity_1.default.findOneById(id);
-        if (!game)
-            throw new routing_controllers_1.NotFoundError("Cannot find game");
-        logic_1.checkGameStatus(game);
-        entity_1.default.merge(game, userId).save();
-        index_1.io.emit("action", {
-            type: "SET_CARD",
-            payload: await entity_1.default.findOneById(game.id)
+    async updateGame(user, gameId) {
+        const userId = { userid_to_player2: '' + user.id };
+        const status = { status: 'player1' };
+        const game = await entity_1.default.findOneById(gameId);
+        entity_1.default.merge(game, userId, status).save();
+        index_1.io.emit('action', {
+            type: 'FETCH_CARDS',
+            payload: game
         });
-        return {
-            message: `The player with id ${userId.userid_to_player2} joined the game ${id}`
-        };
+        return game;
     }
     async playGame(user, gameId, cardId) {
         const userId = user.id;
@@ -49,7 +45,7 @@ let GameController = class GameController {
         await entity_1.default.merge(game, userId).save();
         index_1.io.emit("action", {
             type: "FETCH_CARDS",
-            payload: await entity_1.default.findOneById(game.id)
+            payload: game
         });
         return game;
     }
@@ -57,11 +53,7 @@ let GameController = class GameController {
         const userId = user.id;
         const game = await entity_1.default.findOneById(id);
         if (game) {
-            logic_1.checkGameStatus(game);
-            if (userId === Number(game.userid_to_player1)) {
-                return game;
-            }
-            else if (userId === Number(game.userid_to_player2)) {
+            if (userId === Number(game.userid_to_player1) || userId === Number(game.userid_to_player2)) {
                 return game;
             }
             else {
@@ -89,6 +81,7 @@ let GameController = class GameController {
     async create(user) {
         const userId = { userId: user.id };
         const game = await logic_1.createGame(userId).save();
+        logic_1.checkGameStatus(game);
         const games = await entity_1.default.find();
         games.sort(function (a, b) {
             return a.id - b.id;
@@ -107,8 +100,9 @@ let GameController = class GameController {
 };
 __decorate([
     routing_controllers_1.Authorized(),
-    routing_controllers_1.Put("/games/:id/join"),
-    __param(0, routing_controllers_1.CurrentUser()), __param(1, routing_controllers_1.Param("id")),
+    routing_controllers_1.Patch("/games/:gameId/join"),
+    __param(0, routing_controllers_1.CurrentUser()),
+    __param(1, routing_controllers_1.Param("gameId")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [entity_2.default, Number]),
     __metadata("design:returntype", Promise)

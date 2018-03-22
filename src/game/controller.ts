@@ -18,27 +18,27 @@ import { io } from "../index";
 
 @JsonController()
 export default class GameController {
+
+
   @Authorized()
-  @Put("/games/:id/join")
-  async updateGame(@CurrentUser() user: User, @Param("id") id: number) {
-    const userId = { userid_to_player2: user.id.toString() };
-    const game = await Game.findOneById(id);
-    if (!game) throw new NotFoundError("Cannot find game");
-    checkGameStatus(game);
-    Game.merge(game, userId).save();
+  @Patch("/games/:gameId/join")
+  async updateGame(
+    @CurrentUser() user: User,
+    @Param("gameId") gameId: number
+  ) {
+    const userId = { userid_to_player2: '' + user.id };
+    const status = { status: 'player1'}
+    const game = await Game.findOneById(gameId);
+    Game.merge(game,userId, status).save();
 
-    io.emit("action", {
-      type: "SET_CARD",
-      payload: await Game.findOneById(game.id)
-    });
+    io.emit('action', {
+        type: 'FETCH_CARDS',
+        payload: game
+    })
 
-
-    return {
-      message: `The player with id ${
-        userId.userid_to_player2
-      } joined the game ${id}`
-    };
+    return game;
   }
+
 
   @Authorized()
   @Patch("/games/:id")
@@ -64,7 +64,7 @@ export default class GameController {
 
     io.emit("action", {
       type: "FETCH_CARDS",
-      payload: await Game.findOneById(game.id)
+      payload: game
     });
 
     return game;
@@ -76,10 +76,7 @@ export default class GameController {
     const userId = user.id;
     const game = await Game.findOneById(id);
     if (game) {
-      checkGameStatus(game);
-      if (userId === Number(game.userid_to_player1)) {
-        return game;
-      } else if (userId === Number(game.userid_to_player2)) {
+      if (userId === Number(game.userid_to_player1) || userId === Number(game.userid_to_player2)) {
         return game;
       } else {
         return { message: "You are not playing at this game, get out" };
@@ -112,6 +109,7 @@ export default class GameController {
   async create(@CurrentUser() user: User) {
     const userId = { userId: user.id };
     const game = await createGame(userId).save();
+    checkGameStatus(game);
 
     const games = await Game.find();
     games.sort(function(a, b) {
