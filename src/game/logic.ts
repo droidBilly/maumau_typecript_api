@@ -16,16 +16,16 @@ export function createGame(userId) {
     player2: randomCard.slice(5, 10),
     active: randomCard[10],
     stack: randomCard.slice(11, randomCard.length),
-    userid_to_player1: userId.userId
+    userid_to_player1: userId.userId,
+    status: 'wait'
   })
 }
 
 export function checkGameStatus(game) {
 
   switch(game.status) {
-    case null:
-      if (game.userid_to_player1 === null || game.userid_to_player2 === null ) return game.status = 'wait'
     case 'wait':
+      if (game.userid_to_player1 === null || game.userid_to_player2 === null ) return game.status = 'wait'
       if (!(game.userid_to_player1 === null && game.userid_to_player2 === null) ) return game.status = 'player1'
     case 'player1':
       return game.status = 'player2'
