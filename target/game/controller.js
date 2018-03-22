@@ -33,18 +33,33 @@ let GameController = class GameController {
         const userId = user.id;
         const game = await entity_1.default.findOneById(gameId);
         if (!game)
-            throw new routing_controllers_1.NotFoundError("Cannot find game");
+            throw new routing_controllers_1.NotFoundError('Cannot find game');
         logic_1.checkGameStatus(game);
-        game.player1 = game.player1.filter(item => {
-            return item != game.active;
-        });
-        game.player2 = game.player2.filter(item => {
-            return item != game.active;
-        });
-        game.active = cardId.cardId;
+        if (cardId.cardId === undefined) {
+            if (userId === Number(game.userid_to_player1)) {
+                const card = game.stack.pop();
+                console.log(card);
+                game.player1.push(card);
+            }
+            else if (userId === Number(game.userid_to_player2)) {
+                const card = game.stack.pop();
+                console.log(card);
+                game.player2.push(card);
+            }
+        }
+        else {
+            game.played.push(game.active);
+            game.active = cardId.cardId;
+            game.player1 = game.player1.filter(item => {
+                return item != game.active;
+            });
+            game.player2 = game.player2.filter(item => {
+                return item != game.active;
+            });
+        }
         await entity_1.default.merge(game, userId).save();
-        index_1.io.emit("action", {
-            type: "FETCH_CARDS",
+        index_1.io.emit('action', {
+            type: 'FETCH_CARDS',
             payload: game
         });
         return game;
@@ -109,9 +124,9 @@ __decorate([
 ], GameController.prototype, "updateGame", null);
 __decorate([
     routing_controllers_1.Authorized(),
-    routing_controllers_1.Patch("/games/:id"),
+    routing_controllers_1.Patch('/games/:id'),
     __param(0, routing_controllers_1.CurrentUser()),
-    __param(1, routing_controllers_1.Param("id")),
+    __param(1, routing_controllers_1.Param('id')),
     __param(2, routing_controllers_1.Body()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [entity_2.default, Number, Object]),

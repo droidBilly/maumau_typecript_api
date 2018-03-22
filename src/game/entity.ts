@@ -14,7 +14,7 @@ export default class Game extends BaseEntity {
   stack: any[]
 
 
-  @Column('json', {nullable:true})
+  @Column('json', {nullable:true, default:[]})
   played: any[]
 
 

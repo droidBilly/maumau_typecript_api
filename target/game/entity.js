@@ -22,7 +22,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Game.prototype, "stack", void 0);
 __decorate([
-    typeorm_1.Column('json', { nullable: true }),
+    typeorm_1.Column('json', { nullable: true, default: [] }),
     __metadata("design:type", Array)
 ], Game.prototype, "played", void 0);
 __decorate([
