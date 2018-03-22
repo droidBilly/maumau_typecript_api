@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const routing_controllers_1 = require("routing-controllers");
 const entity_1 = require("./entity");
 const logic_1 = require("./logic");
-const logic_2 = require("./logic");
 const entity_2 = require("../users/entity");
 const index_1 = require("../index");
 let GameController = class GameController {
@@ -35,14 +34,29 @@ let GameController = class GameController {
         const game = await entity_1.default.findOneById(gameId);
         if (!game)
             throw new routing_controllers_1.NotFoundError('Cannot find game');
-        logic_2.checkGameStatus(game);
-        game.player1 = game.player1.filter(item => {
-            return item != game.active;
-        });
-        game.player2 = game.player2.filter(item => {
-            return item != game.active;
-        });
-        game.active = cardId.cardId;
+        logic_1.checkGameStatus(game);
+        if (cardId.cardId === undefined) {
+            if (userId === Number(game.userid_to_player1)) {
+                const card = game.stack.pop();
+                console.log(card);
+                game.player1.push(card);
+            }
+            else if (userId === Number(game.userid_to_player2)) {
+                const card = game.stack.pop();
+                console.log(card);
+                game.player2.push(card);
+            }
+        }
+        else {
+            game.played.push(game.active);
+            game.active = cardId.cardId;
+            game.player1 = game.player1.filter(item => {
+                return item != game.active;
+            });
+            game.player2 = game.player2.filter(item => {
+                return item != game.active;
+            });
+        }
         await entity_1.default.merge(game, userId).save();
         index_1.io.emit('action', {
             type: 'FETCH_CARDS',

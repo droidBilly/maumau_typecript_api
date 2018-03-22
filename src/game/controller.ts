@@ -12,8 +12,7 @@ import {
   Patch
 } from "routing-controllers";
 import Game from "./entity";
-import { createGame } from "./logic";
-import { checkGameStatus } from "./logic";
+import { createGame, checkGameStatus, pushToPlayed } from "./logic";
 import User from "../users/entity";
 import { io } from "../index";
 
@@ -50,13 +49,28 @@ export default class GameController {
       const game = await Game.findOneById(gameId)
       if (!game) throw new NotFoundError('Cannot find game')
       checkGameStatus(game)
-      game.player1 = game.player1.filter(item => {
+
+      if (cardId.cardId === undefined) {
+        if (userId === Number(game.userid_to_player1)) {
+          const card = game.stack.pop()
+          console.log(card)
+          game.player1.push(card)
+        } else if (userId === Number(game.userid_to_player2)) {
+          const card = game.stack.pop()
+          console.log(card)
+          game.player2.push(card)
+        }
+      }
+      else {
+        game.played.push(game.active)
+        game.active = cardId.cardId
+        game.player1 = game.player1.filter(item => {
           return item != game.active
         })
-      game.player2 = game.player2.filter(item => {
+        game.player2 = game.player2.filter(item => {
           return item != game.active
         })
-      game.active = cardId.cardId
+      }
 
       await Game.merge(game, userId).save()
 

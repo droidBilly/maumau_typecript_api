@@ -16,6 +16,7 @@ function createGame(userId) {
         player1: randomCard.slice(0, 5),
         player2: randomCard.slice(5, 10),
         active: randomCard[10],
+        played: [],
         stack: randomCard.slice(11, randomCard.length),
         userid_to_player1: userId.userId,
         status: 'wait'
