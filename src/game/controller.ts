@@ -13,6 +13,7 @@ import {
 } from "routing-controllers";
 import Game from "./entity";
 import { createGame } from "./logic";
+import { checkGameStatus } from "./logic";
 import User from "../users/entity";
 import { io } from "../index";
 
@@ -47,7 +48,7 @@ export default class GameController {
       const userId =  user.id!
       const game = await Game.findOneById(gameId)
       if (!game) throw new NotFoundError('Cannot find game')
-
+      checkGameStatus(game)
       game.player1 = game.player1.filter(item => {
           return item != game.active
         })
@@ -74,7 +75,7 @@ export default class GameController {
     const userId = user.id;
     const game = await Game.findOneById(id);
     if (game) {
-
+      checkGameStatus(game)
       if (userId === Number(game.userid_to_player1)) {
         return game
       } else if (userId === Number(game.userid_to_player2)) {

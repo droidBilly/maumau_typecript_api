@@ -1,7 +1,5 @@
 import Game from './entity'
 
-
-
 export function shuffle(a) {
    for (let i = a.length - 1; i > 0; i--) {
        const j = Math.floor(Math.random() * (i + 1));
@@ -20,4 +18,20 @@ export function createGame(userId) {
     stack: randomCard.slice(11, randomCard.length),
     userid_to_player1: userId.userId
   })
+}
+
+export function checkGameStatus(game) {
+
+  switch(game.status) {
+    case null:
+      if (game.userid_to_player1 === null || game.userid_to_player2 === null ) return game.status = 'wait'
+    case 'wait':
+      if (!(game.userid_to_player1 === null && game.userid_to_player2 === null) ) return game.status = 'player1'
+    case 'player1':
+      return game.status = 'player2'
+    case 'player2':
+      return game.status = 'player1'
+    default:
+      return game.status = 'wait'
+  }
 }

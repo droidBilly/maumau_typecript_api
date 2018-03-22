@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const routing_controllers_1 = require("routing-controllers");
 const entity_1 = require("./entity");
 const logic_1 = require("./logic");
+const logic_2 = require("./logic");
 const entity_2 = require("../users/entity");
 const index_1 = require("../index");
 let GameController = class GameController {
@@ -33,6 +34,7 @@ let GameController = class GameController {
         const game = await entity_1.default.findOneById(gameId);
         if (!game)
             throw new routing_controllers_1.NotFoundError('Cannot find game');
+        logic_2.checkGameStatus(game);
         game.player1 = game.player1.filter(item => {
             return item != game.active;
         });
@@ -51,6 +53,7 @@ let GameController = class GameController {
         const userId = user.id;
         const game = await entity_1.default.findOneById(id);
         if (game) {
+            logic_2.checkGameStatus(game);
             if (userId === Number(game.userid_to_player1)) {
                 return game;
             }
