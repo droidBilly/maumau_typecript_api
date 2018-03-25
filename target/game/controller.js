@@ -38,12 +38,10 @@ let GameController = class GameController {
         if (cardId.cardId === undefined) {
             if (userId === Number(game.userid_to_player1)) {
                 const card = game.stack.pop();
-                console.log(card);
                 game.player1.push(card);
             }
             else if (userId === Number(game.userid_to_player2)) {
                 const card = game.stack.pop();
-                console.log(card);
                 game.player2.push(card);
             }
         }
@@ -56,6 +54,20 @@ let GameController = class GameController {
             game.player2 = game.player2.filter(item => {
                 return item != game.active;
             });
+        }
+        if (game.active === 1 || game.active === 2 || game.active === 3 || game.active === 4) {
+            if (userId === Number(game.userid_to_player1)) {
+                const twoCards = game.stack.splice(0, 2);
+                game.player2.push(...twoCards);
+            }
+            else if (userId === Number(game.userid_to_player2)) {
+                const twoCards = game.stack.splice(0, 2);
+                game.player1.push(...twoCards);
+            }
+        }
+        if (game.stack.length === 0) {
+            const newStack = game.played.splice(1, game.played.length);
+            game.stack.push(...newStack);
         }
         await entity_1.default.merge(game, userId).save();
         index_1.io.emit('action', {
