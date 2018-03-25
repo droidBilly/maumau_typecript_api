@@ -12,7 +12,7 @@ import {
   Patch
 } from "routing-controllers";
 import Game from "./entity";
-import { createGame, checkGameStatus, pushToPlayed } from "./logic";
+import { createGame, checkGameStatus } from "./logic";
 import User from "../users/entity";
 import { io } from "../index";
 
@@ -49,15 +49,12 @@ export default class GameController {
       const game = await Game.findOneById(gameId)
       if (!game) throw new NotFoundError('Cannot find game')
       checkGameStatus(game)
-
       if (cardId.cardId === undefined) {
         if (userId === Number(game.userid_to_player1)) {
           const card = game.stack.pop()
-          console.log(card)
           game.player1.push(card)
         } else if (userId === Number(game.userid_to_player2)) {
           const card = game.stack.pop()
-          console.log(card)
           game.player2.push(card)
         }
       }

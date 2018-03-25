@@ -10,7 +10,7 @@ function shuffle(a) {
 }
 exports.shuffle = shuffle;
 function createGame(userId) {
-    let cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32];
+    let cards = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32], tom;
     var randomCard = shuffle(cards);
     return entity_1.default.create({
         player1: randomCard.slice(0, 5),
@@ -24,6 +24,7 @@ function createGame(userId) {
 }
 exports.createGame = createGame;
 function checkGameStatus(game) {
+    fillStack(game);
     switch (game.status) {
         case 'wait':
             if (game.userid_to_player1 === null || game.userid_to_player2 === null)
@@ -39,4 +40,16 @@ function checkGameStatus(game) {
     }
 }
 exports.checkGameStatus = checkGameStatus;
+function isSpecialCard(game, cardId) {
+}
+exports.isSpecialCard = isSpecialCard;
+function fillStack(game) {
+    if (game.stack.length <= 1) {
+        let cards_to_shuffle = game.played.concat(game.stack);
+        let shuffeled_cards = shuffle(cards_to_shuffle);
+        game.played = [];
+        game.stack = shuffeled_cards;
+    }
+}
+exports.fillStack = fillStack;
 //# sourceMappingURL=logic.js.map
