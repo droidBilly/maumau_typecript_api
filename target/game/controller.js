@@ -68,6 +68,7 @@ let GameController = class GameController {
         if (game.stack.length === 0) {
             const newStack = game.played.splice(1, game.played.length);
             game.stack.push(...newStack);
+            logic_1.shuffle(game.stack);
         }
         await entity_1.default.merge(game, userId).save();
         index_1.io.emit('action', {

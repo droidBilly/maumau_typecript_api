@@ -12,7 +12,7 @@ import {
   Patch
 } from "routing-controllers";
 import Game from "./entity";
-import { createGame, checkGameStatus } from "./logic";
+import { createGame, checkGameStatus, shuffle } from "./logic";
 import User from "../users/entity";
 import { io } from "../index";
 
@@ -85,6 +85,7 @@ export default class GameController {
       if(game.stack.length === 0 ) {
       const newStack = game.played.splice(1, game.played.length )
        game.stack.push(...newStack)
+       shuffle(game.stack)
       }
 
       await Game.merge(game, userId).save()
